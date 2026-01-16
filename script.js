@@ -568,6 +568,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // If this is a control block, push it to the nesting stack
       if (isControlBlock) {
+        // If this control block has a condition, try to parse it
+        if (blockData._conditionText) {
+          const conditionBlockId = parseConditionAndCreateBlocks(
+            blockData._conditionText,
+            blockId,
+            blocks,
+          );
+          if (conditionBlockId) {
+            blockData.inputs.CONDITION = [2, conditionBlockId];
+          }
+          delete blockData._conditionText; // Clean up temp property
+        }
+
         nestingStack.push({
           blockId: blockId,
           slot: "SUBSTACK",
@@ -575,6 +588,128 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         // Don't update lastBlockInChain - blocks inside will link differently
       }
+    }
+
+    // Helper function to parse condition text and create boolean blocks
+    function parseConditionAndCreateBlocks(
+      conditionText,
+      parentBlockId,
+      blocks,
+    ) {
+      const uid = () => window.ScratchBlocksParser.generateUID();
+
+      // Simple touching [sprite v]?
+      let match = conditionText.match(/touching \[(.+?)(?: v)?\]\??/i);
+      if (match) {
+        const blockId = uid();
+        blocks[blockId] = {
+          opcode: "sensing_touchingobject",
+          next: null,
+          parent: parentBlockId,
+          inputs: {
+            TOUCHINGOBJECTMENU: [1, [10, match[1]]],
+          },
+          fields: {},
+          shadow: false,
+          topLevel: false,
+        };
+        return blockId;
+      }
+
+      // Check for "or" condition: <cond1> or <cond2>
+      match = conditionText.match(/<(.+?)>\s*or\s*<(.+?)>/i);
+      if (match) {
+        const orBlockId = uid();
+        const leftId = parseConditionAndCreateBlocks(
+          match[1],
+          orBlockId,
+          blocks,
+        );
+        const rightId = parseConditionAndCreateBlocks(
+          match[2],
+          orBlockId,
+          blocks,
+        );
+
+        blocks[orBlockId] = {
+          opcode: "operator_or",
+          next: null,
+          parent: parentBlockId,
+          inputs: {
+            OPERAND1: leftId ? [2, leftId] : [2, null],
+            OPERAND2: rightId ? [2, rightId] : [2, null],
+          },
+          fields: {},
+          shadow: false,
+          topLevel: false,
+        };
+        return orBlockId;
+      }
+
+      // Check for "and" condition: <cond1> and <cond2>
+      match = conditionText.match(/<(.+?)>\s*and\s*<(.+?)>/i);
+      if (match) {
+        const andBlockId = uid();
+        const leftId = parseConditionAndCreateBlocks(
+          match[1],
+          andBlockId,
+          blocks,
+        );
+        const rightId = parseConditionAndCreateBlocks(
+          match[2],
+          andBlockId,
+          blocks,
+        );
+
+        blocks[andBlockId] = {
+          opcode: "operator_and",
+          next: null,
+          parent: parentBlockId,
+          inputs: {
+            OPERAND1: leftId ? [2, leftId] : [2, null],
+            OPERAND2: rightId ? [2, rightId] : [2, null],
+          },
+          fields: {},
+          shadow: false,
+          topLevel: false,
+        };
+        return andBlockId;
+      }
+
+      // Key pressed?
+      match = conditionText.match(/key \[(.+?)\] pressed\??/i);
+      if (match) {
+        const blockId = uid();
+        blocks[blockId] = {
+          opcode: "sensing_keypressed",
+          next: null,
+          parent: parentBlockId,
+          inputs: {
+            KEY_OPTION: [1, [10, match[1]]],
+          },
+          fields: {},
+          shadow: false,
+          topLevel: false,
+        };
+        return blockId;
+      }
+
+      // Mouse down?
+      if (conditionText.toLowerCase().includes("mouse down")) {
+        const blockId = uid();
+        blocks[blockId] = {
+          opcode: "sensing_mousedown",
+          next: null,
+          parent: parentBlockId,
+          inputs: {},
+          fields: {},
+          shadow: false,
+          topLevel: false,
+        };
+        return blockId;
+      }
+
+      return null; // Unknown condition
     }
 
     return {

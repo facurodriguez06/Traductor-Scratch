@@ -118,14 +118,27 @@ window.ScratchBlocksParser = {
       });
     }
 
+    // IF block - try to extract condition
     if (
       (lowerLine.startsWith("if") && !lowerLine.includes("else")) ||
       (lowerLine.startsWith("si") && !lowerLine.includes("sino"))
     ) {
-      return this.createBlock("control_if", parentId, {
+      // Extract condition text from between < > or after "if"
+      const conditionMatch =
+        originalLine.match(/if\s*<(.+?)>\s*then/i) ||
+        originalLine.match(/si\s*<(.+?)>\s*entonces/i);
+
+      const block = this.createBlock("control_if", parentId, {
         CONDITION: [2, null],
         SUBSTACK: [2, null],
       });
+
+      // Store condition text for potential future parsing
+      if (conditionMatch) {
+        block._conditionText = conditionMatch[1];
+      }
+
+      return block;
     }
 
     if (lowerLine === "else" || lowerLine === "sino" || lowerLine === "si no") {
