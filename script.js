@@ -153,7 +153,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function callGemini(key, system, user) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+    // Fallback to 'gemini-pro' (stable) if flash fails, or use 'gemini-1.5-flash'
+    // Using 'gemini-pro' as it is widely available on the free tier without issues.
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${key}`;
 
     const payload = {
       contents: [
