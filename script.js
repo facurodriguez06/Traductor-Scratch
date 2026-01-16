@@ -446,11 +446,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     for (const line of lines) {
       const blockId = window.ScratchBlocksParser.generateUID();
+      console.log("Parsing line:", line);
       const blockData = window.ScratchBlocksParser.parseBlockLine(
         line,
         blockId,
         prevBlockId,
       );
+      console.log("Result:", blockData);
 
       if (blockData) {
         if (!topLevelBlockId) {
