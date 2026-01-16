@@ -44,6 +44,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const copyBtn = document.getElementById("copy-btn");
   copyBtn.addEventListener("click", handleCopy);
 
+  const exportBtn = document.getElementById("export-btn");
+  exportBtn.addEventListener("click", handleExport);
+
+  // Store last translated scratchblocks text for export
+  let lastScratchBlocksCode = "";
+
   translateBtn.addEventListener("click", handleTranslate);
 
   // scratchblocks init (ensure it's loaded)
@@ -123,6 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const scratchBlocksCode = await fetchTranslation(code);
+      lastScratchBlocksCode = scratchBlocksCode; // Store for export
       renderBlocks(scratchBlocksCode);
     } catch (error) {
       console.error(error);
@@ -351,5 +358,325 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error(e);
       alert("Error inesperado al copiar.");
     }
+  }
+
+  // =============================================
+  // EXPORT TO SCRATCH (.sprite3) FUNCTIONALITY
+  // =============================================
+
+  async function handleExport() {
+    if (!lastScratchBlocksCode) {
+      alert("Primero traduzca algún código para poder exportar.");
+      return;
+    }
+
+    try {
+      exportBtn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+
+      const spriteData = convertToScratchJSON(lastScratchBlocksCode);
+      const sprite3Blob = await createSprite3File(spriteData);
+
+      // Trigger download
+      const url = URL.createObjectURL(sprite3Blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "code2scratch_sprite.sprite3";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      exportBtn.innerHTML = '<i class="bi bi-check-lg"></i>';
+      setTimeout(
+        () => (exportBtn.innerHTML = '<i class="bi bi-download"></i>'),
+        2000,
+      );
+    } catch (e) {
+      console.error(e);
+      alert("Error al exportar: " + e.message);
+      exportBtn.innerHTML = '<i class="bi bi-download"></i>';
+    }
+  }
+
+  function generateUID() {
+    // Generate a random Scratch-compatible UID
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,-./:;=?@[]^_`{|}~";
+    let result = "";
+    for (let i = 0; i < 20; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
+  function convertToScratchJSON(scratchBlocksText) {
+    // Parse scratchblocks text and convert to Scratch 3.0 JSON format
+    const lines = scratchBlocksText
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l);
+
+    const blocks = {};
+    let prevBlockId = null;
+    let topLevelBlockId = null;
+    let x = 0,
+      y = 0;
+
+    for (const line of lines) {
+      const blockId = generateUID();
+      const blockData = parseBlockLine(line, blockId, prevBlockId);
+
+      if (blockData) {
+        if (!topLevelBlockId) {
+          topLevelBlockId = blockId;
+          blockData.topLevel = true;
+          blockData.x = x;
+          blockData.y = y;
+        } else {
+          blockData.topLevel = false;
+          // Link previous block to this one
+          if (prevBlockId && blocks[prevBlockId]) {
+            blocks[prevBlockId].next = blockId;
+          }
+          blockData.parent = prevBlockId;
+        }
+
+        blocks[blockId] = blockData;
+        prevBlockId = blockId;
+      }
+    }
+
+    return {
+      isStage: false,
+      name: "Code2Scratch",
+      variables: {},
+      lists: {},
+      broadcasts: {},
+      blocks: blocks,
+      comments: {},
+      currentCostume: 0,
+      costumes: [
+        {
+          name: "costume1",
+          bitmapResolution: 1,
+          dataFormat: "svg",
+          assetId: "bcf454acf82e4504149f7ffe07081dbc",
+          md5ext: "bcf454acf82e4504149f7ffe07081dbc.svg",
+          rotationCenterX: 0,
+          rotationCenterY: 0,
+        },
+      ],
+      sounds: [],
+      volume: 100,
+      layerOrder: 1,
+      visible: true,
+      x: 0,
+      y: 0,
+      size: 100,
+      direction: 90,
+      draggable: false,
+      rotationStyle: "all around",
+    };
+  }
+
+  function parseBlockLine(line, blockId, parentId) {
+    // Match common scratchblocks patterns and convert to opcodes
+    const lowerLine = line.toLowerCase();
+
+    // when green flag clicked
+    if (
+      lowerLine.includes("when green flag clicked") ||
+      lowerLine.includes("al presionar bandera verde")
+    ) {
+      return {
+        opcode: "event_whenflagclicked",
+        next: null,
+        parent: parentId,
+        inputs: {},
+        fields: {},
+        shadow: false,
+        topLevel: false,
+      };
+    }
+
+    // say [...] / say [...] for (...) secs
+    const sayMatch =
+      line.match(/say \[(.*)\](?: for \((.*)\) secs)?/i) ||
+      line.match(/decir \[(.*)\](?: durante \((.*)\) segundos)?/i);
+    if (sayMatch) {
+      const message = sayMatch[1] || "Hello!";
+      const duration = sayMatch[2];
+
+      if (duration) {
+        return {
+          opcode: "looks_sayforsecs",
+          next: null,
+          parent: parentId,
+          inputs: {
+            MESSAGE: [1, [10, message]],
+            SECS: [1, [4, duration]],
+          },
+          fields: {},
+          shadow: false,
+          topLevel: false,
+        };
+      } else {
+        return {
+          opcode: "looks_say",
+          next: null,
+          parent: parentId,
+          inputs: {
+            MESSAGE: [1, [10, message]],
+          },
+          fields: {},
+          shadow: false,
+          topLevel: false,
+        };
+      }
+    }
+
+    // wait (...) secs / esperar (...) segundos
+    const waitMatch =
+      line.match(/wait \((.*)\) secs/i) ||
+      line.match(/esperar \((.*)\) segundos/i);
+    if (waitMatch) {
+      return {
+        opcode: "control_wait",
+        next: null,
+        parent: parentId,
+        inputs: {
+          DURATION: [1, [4, waitMatch[1] || "1"]],
+        },
+        fields: {},
+        shadow: false,
+        topLevel: false,
+      };
+    }
+
+    // repeat (...) / repetir (...)
+    const repeatMatch =
+      line.match(/repeat \((.*)\)/i) || line.match(/repetir \((.*)\)/i);
+    if (repeatMatch) {
+      return {
+        opcode: "control_repeat",
+        next: null,
+        parent: parentId,
+        inputs: {
+          TIMES: [1, [6, repeatMatch[1] || "10"]],
+          SUBSTACK: [2, null],
+        },
+        fields: {},
+        shadow: false,
+        topLevel: false,
+      };
+    }
+
+    // forever / por siempre
+    if (lowerLine.includes("forever") || lowerLine.includes("por siempre")) {
+      return {
+        opcode: "control_forever",
+        next: null,
+        parent: parentId,
+        inputs: {
+          SUBSTACK: [2, null],
+        },
+        fields: {},
+        shadow: false,
+        topLevel: false,
+      };
+    }
+
+    // move (...) steps / mover (...) pasos
+    const moveMatch =
+      line.match(/move \((.*)\) steps/i) || line.match(/mover \((.*)\) pasos/i);
+    if (moveMatch) {
+      return {
+        opcode: "motion_movesteps",
+        next: null,
+        parent: parentId,
+        inputs: {
+          STEPS: [1, [4, moveMatch[1] || "10"]],
+        },
+        fields: {},
+        shadow: false,
+        topLevel: false,
+      };
+    }
+
+    // turn right (...) degrees / girar (...) grados
+    const turnMatch =
+      line.match(/turn (?:right|↻) \((.*)\) degrees/i) ||
+      line.match(/girar \((.*)\) grados/i);
+    if (turnMatch) {
+      return {
+        opcode: "motion_turnright",
+        next: null,
+        parent: parentId,
+        inputs: {
+          DEGREES: [1, [4, turnMatch[1] || "15"]],
+        },
+        fields: {},
+        shadow: false,
+        topLevel: false,
+      };
+    }
+
+    // go to x: (...) y: (...)
+    const gotoMatch =
+      line.match(/go to x: ?\((.*)\) y: ?\((.*)\)/i) ||
+      line.match(/ir a x: ?\((.*)\) y: ?\((.*)\)/i);
+    if (gotoMatch) {
+      return {
+        opcode: "motion_gotoxy",
+        next: null,
+        parent: parentId,
+        inputs: {
+          X: [1, [4, gotoMatch[1] || "0"]],
+          Y: [1, [4, gotoMatch[2] || "0"]],
+        },
+        fields: {},
+        shadow: false,
+        topLevel: false,
+      };
+    }
+
+    // set [var v] to (...) / establecer [var v] a (...)
+    const setVarMatch =
+      line.match(/set \[(.+?) v\] to \((.*)\)/i) ||
+      line.match(/establecer \[(.+?) v\] a \((.*)\)/i);
+    if (setVarMatch) {
+      return {
+        opcode: "data_setvariableto",
+        next: null,
+        parent: parentId,
+        inputs: {
+          VALUE: [1, [10, setVarMatch[2] || "0"]],
+        },
+        fields: {
+          VARIABLE: [setVarMatch[1], setVarMatch[1]],
+        },
+        shadow: false,
+        topLevel: false,
+      };
+    }
+
+    // Default: If no match, create a comment-like block (or skip)
+    // For now, we'll just skip unknown blocks
+    return null;
+  }
+
+  async function createSprite3File(spriteData) {
+    const zip = new JSZip();
+
+    // Add sprite.json
+    zip.file("sprite.json", JSON.stringify(spriteData, null, 2));
+
+    // Add a minimal costume (empty SVG)
+    const emptySVG =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="50" cy="50" r="40" fill="#FF8C1A"/></svg>';
+    zip.file("bcf454acf82e4504149f7ffe07081dbc.svg", emptySVG);
+
+    // Generate the blob
+    return await zip.generateAsync({ type: "blob" });
   }
 });

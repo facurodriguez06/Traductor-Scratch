@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Code to Scratch AI | Traductor Inteligente</title>
+    <title>Fran to Scratch AI | Traductor Inteligente</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,7 +33,7 @@
         <header class="app-header">
             <div class="logo-area">
                 <i class="bi bi-magic"></i>
-                <h1>Code2<span class="gradient-text">Scratch</span></h1>
+                <h1>Fran2<span class="gradient-text">Scratch</span></h1>
             </div>
             <div class="header-controls">
                 <button id="settings-btn" class="icon-btn" title="Configuración">
@@ -70,9 +70,15 @@
             <section class="preview-section">
                 <div class="section-header">
                     <h2><i class="bi bi-puzzle-fill"></i> Resultado Scratch</h2>
-                    <button id="copy-btn" class="sm-btn" title="Copiar SVG">
-                        <i class="bi bi-clipboard"></i>
-                    </button>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="copy-btn" class="sm-btn" title="Copiar Imagen">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                        <button id="export-btn" class="sm-btn" title="Exportar a Scratch (.sprite3)"
+                            style="background: var(--primary);">
+                            <i class="bi bi-download"></i>
+                        </button>
+                    </div>
                 </div>
                 <div id="scratch-canvas" class="scratch-canvas">
                     <p class="placeholder-text">Los bloques aparecerán aquí...</p>
@@ -131,6 +137,9 @@
 
     <!-- Markdown parser (optional, if AI returns md) -->
     <!-- <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> -->
+
+    <!-- JSZip for .sprite3 generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <script src="script.js"></script>
 </body>
