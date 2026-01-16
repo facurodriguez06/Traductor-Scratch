@@ -450,10 +450,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .filter((l) => l);
 
     const blocks = {};
-    let prevBlockId = null;
-    let topLevelBlockId = null;
-    let x = 0,
-      y = 0;
 
     // Hat blocks that start new script stacks
     const hatBlocks = [
@@ -464,39 +460,115 @@ document.addEventListener("DOMContentLoaded", () => {
       "control_start_as_clone",
     ];
 
+    // Control blocks that have a SUBSTACK (contain other blocks)
+    const controlBlocks = [
+      "control_forever",
+      "control_repeat",
+      "control_if",
+      "control_if_else",
+      "control_repeat_until",
+    ];
+
     let scriptCount = 0;
 
-    for (const line of lines) {
+    // Stack to track nesting: each entry is { blockId, slot: 'SUBSTACK' or 'SUBSTACK2' }
+    const nestingStack = [];
+    let currentParentId = null;
+    let lastBlockInChain = null;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const lowerLine = line.toLowerCase();
+
+      // Check for "end" markers that close control structures
+      if (lowerLine === "end" || lowerLine === "fin") {
+        if (nestingStack.length > 0) {
+          const popped = nestingStack.pop();
+          // When exiting a control block, the next block should be the "next" of that control block
+          lastBlockInChain = popped.blockId;
+          currentParentId = popped.blockId;
+        }
+        continue;
+      }
+
+      // Check for "else" which switches to SUBSTACK2
+      if (lowerLine === "else" || lowerLine === "sino") {
+        if (nestingStack.length > 0) {
+          // Switch the current control block to use SUBSTACK2
+          const current = nestingStack[nestingStack.length - 1];
+          current.slot = "SUBSTACK2";
+          current.firstInSlot = true; // Next block is first in this slot
+          lastBlockInChain = null; // Reset chain for the else branch
+        }
+        continue;
+      }
+
       const blockId = window.ScratchBlocksParser.generateUID();
       const blockData = window.ScratchBlocksParser.parseBlockLine(
         line,
         blockId,
-        prevBlockId,
+        null, // We'll set parent manually
       );
 
-      if (blockData) {
-        // Check if this is a hat block (starts a new script)
-        const isHatBlock = hatBlocks.includes(blockData.opcode);
+      if (!blockData) continue;
 
-        if (isHatBlock) {
-          // Hat blocks are always top-level and start new chains
-          blockData.topLevel = true;
-          blockData.parent = null;
-          blockData.x = 50 + scriptCount * 300; // Spread scripts horizontally
-          blockData.y = 50;
-          scriptCount++;
-          prevBlockId = blockId; // Reset chain
-        } else {
-          blockData.topLevel = false;
-          // Link previous block to this one
-          if (prevBlockId && blocks[prevBlockId]) {
-            blocks[prevBlockId].next = blockId;
+      const isHatBlock = hatBlocks.includes(blockData.opcode);
+      const isControlBlock = controlBlocks.includes(blockData.opcode);
+
+      if (isHatBlock) {
+        // Hat blocks start new independent script stacks
+        blockData.topLevel = true;
+        blockData.parent = null;
+        blockData.x = 50 + scriptCount * 300;
+        blockData.y = 50;
+        scriptCount++;
+
+        // Reset stacks for new script
+        nestingStack.length = 0;
+        lastBlockInChain = blockId;
+        currentParentId = blockId;
+      } else {
+        blockData.topLevel = false;
+
+        // Determine where this block should attach
+        if (nestingStack.length > 0) {
+          const context = nestingStack[nestingStack.length - 1];
+
+          if (context.firstInSlot) {
+            // This block is the FIRST inside a control structure
+            blockData.parent = context.blockId;
+            // Link this block as the SUBSTACK/SUBSTACK2 of the control block
+            const slot = context.slot || "SUBSTACK";
+            blocks[context.blockId].inputs[slot] = [2, blockId];
+            context.firstInSlot = false;
+          } else {
+            // This block follows another block in the same nesting level
+            if (lastBlockInChain && blocks[lastBlockInChain]) {
+              blocks[lastBlockInChain].next = blockId;
+              blockData.parent = lastBlockInChain;
+            }
           }
-          blockData.parent = prevBlockId;
-          prevBlockId = blockId;
+        } else {
+          // Top level of script (after hat block)
+          if (lastBlockInChain && blocks[lastBlockInChain]) {
+            blocks[lastBlockInChain].next = blockId;
+            blockData.parent = lastBlockInChain;
+          }
         }
 
-        blocks[blockId] = blockData;
+        lastBlockInChain = blockId;
+      }
+
+      blocks[blockId] = blockData;
+
+      // If this is a control block, push it to the nesting stack
+      if (isControlBlock) {
+        nestingStack.push({
+          blockId: blockId,
+          slot: "SUBSTACK",
+          firstInSlot: true, // The next block will be the first in SUBSTACK
+        });
+        // Don't update lastBlockInChain - blocks inside will link differently
       }
     }
 
