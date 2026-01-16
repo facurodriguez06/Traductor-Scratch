@@ -392,26 +392,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       exportBtn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
 
-      // Debug: show raw scratchblocks text
-      console.log("=== RAW SCRATCHBLOCKS TEXT ===");
-      console.log(lastScratchBlocksCode);
-      console.log("=== END RAW TEXT ===");
-
       const spriteData = convertToScratchJSON(lastScratchBlocksCode);
-      console.log("Generated sprite data:", spriteData);
-      console.log("Total blocks:", Object.keys(spriteData.blocks).length);
-
-      // Debug: Also download the raw JSON
-      const jsonBlob = new Blob([JSON.stringify(spriteData, null, 2)], {
-        type: "application/json",
-      });
-      const jsonUrl = URL.createObjectURL(jsonBlob);
-      const jsonLink = document.createElement("a");
-      jsonLink.href = jsonUrl;
-      jsonLink.download = "sprite_debug.json";
-      jsonLink.click();
-      URL.revokeObjectURL(jsonUrl);
-
       const sprite3Blob = await createSprite3File(spriteData);
 
       // Trigger download
