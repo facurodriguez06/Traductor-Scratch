@@ -441,22 +441,37 @@ document.addEventListener("DOMContentLoaded", () => {
     let x = 0,
       y = 0;
 
+    // Hat blocks that start new script stacks
+    const hatBlocks = [
+      "event_whenflagclicked",
+      "event_whenkeypressed",
+      "event_whenthisspriteclicked",
+      "event_whenbroadcastreceived",
+      "control_start_as_clone",
+    ];
+
+    let scriptCount = 0;
+
     for (const line of lines) {
       const blockId = window.ScratchBlocksParser.generateUID();
-      console.log("Parsing line:", line);
       const blockData = window.ScratchBlocksParser.parseBlockLine(
         line,
         blockId,
         prevBlockId,
       );
-      console.log("Result:", blockData);
 
       if (blockData) {
-        if (!topLevelBlockId) {
-          topLevelBlockId = blockId;
+        // Check if this is a hat block (starts a new script)
+        const isHatBlock = hatBlocks.includes(blockData.opcode);
+
+        if (isHatBlock) {
+          // Hat blocks are always top-level and start new chains
           blockData.topLevel = true;
-          blockData.x = x;
-          blockData.y = y;
+          blockData.parent = null;
+          blockData.x = 50 + scriptCount * 300; // Spread scripts horizontally
+          blockData.y = 50;
+          scriptCount++;
+          prevBlockId = blockId; // Reset chain
         } else {
           blockData.topLevel = false;
           // Link previous block to this one
@@ -464,10 +479,10 @@ document.addEventListener("DOMContentLoaded", () => {
             blocks[prevBlockId].next = blockId;
           }
           blockData.parent = prevBlockId;
+          prevBlockId = blockId;
         }
 
         blocks[blockId] = blockData;
-        prevBlockId = blockId;
       }
     }
 
