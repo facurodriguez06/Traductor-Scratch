@@ -392,7 +392,12 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       exportBtn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
 
+      console.log("=== RAW TEXT ===");
+      console.log(lastScratchBlocksCode);
+      console.log("=== END ===");
+
       const spriteData = convertToScratchJSON(lastScratchBlocksCode);
+      console.log("Total blocks:", Object.keys(spriteData.blocks).length);
       const sprite3Blob = await createSprite3File(spriteData);
 
       // Trigger download
