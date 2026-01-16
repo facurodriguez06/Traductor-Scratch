@@ -59,6 +59,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Functions ---
 
+  // Toast notification system
+  function showToast(message, type = "info", duration = 3000) {
+    const container = document.getElementById("toast-container");
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+
+    const icons = {
+      success: "bi-check-circle-fill",
+      error: "bi-x-circle-fill",
+      info: "bi-info-circle-fill",
+      warning: "bi-exclamation-triangle-fill",
+    };
+
+    toast.innerHTML = `<i class="bi ${icons[type] || icons.info}"></i><span>${message}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add("hiding");
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+  }
+
   function toggleModelInput(prov) {
     if (prov === "gemini") {
       geminiModelGroup.style.display = "block";
@@ -84,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const model = geminiModelInput.value.trim() || "gemini-2.5-flash";
 
     if (!key) {
-      alert("Por favor ingresa una API Key válida.");
+      showToast("Por favor ingresa una API Key válida.", "warning");
       return;
     }
 
@@ -96,7 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
     geminiModel = model;
 
     closeSettings();
-    alert("Configuración guardada!");
+    showToast("¡Configuración guardada!", "success");
   }
 
   function updateHelpLink(prov) {
@@ -113,13 +135,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const code = codeInput.value.trim();
 
     if (!code) {
-      alert("Por favor escribe algo de código para traducir.");
+      showToast("Por favor escribe algo de código para traducir.", "warning");
       return;
     }
 
     if (!apiKey) {
       openSettings();
-      alert("Necesitas configurar tu API Key primero para usar la IA.");
+      showToast("Necesitas configurar tu API Key primero.", "info");
       return;
     }
 
@@ -154,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function checkAvailableModels() {
     const key = apiKeyInput.value.trim();
     if (!key) {
-      alert("Por favor ingresa una API Key primero.");
+      showToast("Por favor ingresa una API Key primero.", "warning");
       return;
     }
 

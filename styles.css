@@ -144,6 +144,7 @@ body {
 .gradient-text {
   background: linear-gradient(to right, var(--primary), var(--accent));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -495,5 +496,211 @@ body {
 
   .preview-section {
     min-height: 400px; /* Ensure space for blocks on mobile */
+  }
+}
+
+/* =============================================
+   TOAST NOTIFICATIONS
+   ============================================= */
+#toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  background: rgba(20, 30, 50, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  color: var(--text-main);
+  font-size: 0.95rem;
+  pointer-events: auto;
+  animation: toastSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 350px;
+}
+
+.toast.toast-success {
+  border-left: 4px solid #00e676;
+}
+
+.toast.toast-error {
+  border-left: 4px solid #ff5252;
+}
+
+.toast.toast-info {
+  border-left: 4px solid var(--primary);
+}
+
+.toast.toast-warning {
+  border-left: 4px solid #ffab00;
+}
+
+.toast i {
+  font-size: 1.3rem;
+}
+
+.toast.toast-success i {
+  color: #00e676;
+}
+.toast.toast-error i {
+  color: #ff5252;
+}
+.toast.toast-info i {
+  color: var(--primary);
+}
+.toast.toast-warning i {
+  color: #ffab00;
+}
+
+.toast.hiding {
+  animation: toastSlideOut 0.3s ease-in forwards;
+}
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* =============================================
+   ADDITIONAL ANIMATIONS & EFFECTS
+   ============================================= */
+
+/* Glow effect on focus for inputs */
+.input-group input:focus,
+.input-group select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+}
+
+/* Button hover glow */
+.sm-btn {
+  transition: all 0.3s ease;
+}
+
+.sm-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 168, 255, 0.4);
+}
+
+/* Pulse animation for CTA button */
+.cta-button {
+  animation: ctaPulse 2s infinite;
+}
+
+@keyframes ctaPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(0, 168, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(0, 168, 255, 0.7);
+  }
+}
+
+/* Editor section hover effect */
+.editor-section:hover,
+.preview-section:hover {
+  border-color: rgba(0, 229, 255, 0.3);
+  box-shadow: 0 0 20px rgba(0, 168, 255, 0.1);
+}
+
+/* Fade-in animation for blocks */
+.scratch-canvas svg {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal slide-in animation */
+.modal.visible .modal-content {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Logo icon spin on hover */
+.logo-area:hover i {
+  animation: logoSpin 0.6s ease-in-out;
+}
+
+@keyframes logoSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Typing cursor animation for textarea placeholder */
+#code-input::placeholder {
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Loading spinner */
+.loader {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
