@@ -10,25 +10,33 @@ document.addEventListener("DOMContentLoaded", () => {
   const apiKeyInput = document.getElementById("api-key");
   const providerSelect = document.getElementById("provider-select");
   const apiHelpLink = document.getElementById("api-help");
+  const geminiModelInput = document.getElementById("gemini-model");
+  const geminiModelGroup = document.getElementById("gemini-model-group");
 
   // State
   let apiKey = localStorage.getItem("scratch_ai_key") || "";
   let provider = localStorage.getItem("scratch_ai_provider") || "gemini";
+  let geminiModel =
+    localStorage.getItem("scratch_ai_model") || "gemini-1.5-flash";
 
   // Initialize UI
   if (apiKey) {
     apiKeyInput.value = apiKey;
   }
   providerSelect.value = provider;
+  geminiModelInput.value = geminiModel;
+
+  toggleModelInput(provider);
   updateHelpLink(provider);
 
   // Event Listeners
   settingsBtn.addEventListener("click", openSettings);
   closeSettingsBtn.addEventListener("click", closeSettings);
   saveSettingsBtn.addEventListener("click", saveSettings);
-  providerSelect.addEventListener("change", (e) =>
-    updateHelpLink(e.target.value),
-  );
+  providerSelect.addEventListener("change", (e) => {
+    toggleModelInput(e.target.value);
+    updateHelpLink(e.target.value);
+  });
 
   translateBtn.addEventListener("click", handleTranslate);
 
@@ -38,6 +46,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Functions ---
+
+  function toggleModelInput(prov) {
+    if (prov === "gemini") {
+      geminiModelGroup.style.display = "block";
+    } else {
+      geminiModelGroup.style.display = "none";
+    }
+  }
 
   function openSettings() {
     settingsModal.classList.remove("hidden");
@@ -53,6 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function saveSettings() {
     const key = apiKeyInput.value.trim();
     const prov = providerSelect.value;
+    const model = geminiModelInput.value.trim() || "gemini-1.5-flash";
 
     if (!key) {
       alert("Por favor ingresa una API Key válida.");
@@ -61,8 +78,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     localStorage.setItem("scratch_ai_key", key);
     localStorage.setItem("scratch_ai_provider", prov);
+    localStorage.setItem("scratch_ai_model", model);
     apiKey = key;
     provider = prov;
+    geminiModel = model;
 
     closeSettings();
     alert("Configuración guardada!");
@@ -153,9 +172,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function callGemini(key, system, user) {
-    // Fallback to 'gemini-pro' (stable) if flash fails, or use 'gemini-1.5-flash'
-    // Using 'gemini-pro' as it is widely available on the free tier without issues.
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${key}`;
+    // Use the simplified model from settings
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${key}`;
 
     const payload = {
       contents: [
