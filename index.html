@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code to Scratch AI | Traductor Inteligente</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Highlight.js for Code Input -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="app-container glass-panel">
+        <header class="app-header">
+            <div class="logo-area">
+                <i class="bi bi-magic"></i>
+                <h1>Code2<span class="gradient-text">Scratch</span></h1>
+            </div>
+            <div class="header-controls">
+                <button id="settings-btn" class="icon-btn" title="Configuración">
+                    <i class="bi bi-gear-fill"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="workspace">
+            <!-- Code Input Section -->
+            <section class="editor-section">
+                <div class="section-header">
+                    <h2><i class="bi bi-code-slash"></i> Tu Código</h2>
+                    <div class="language-badge">Detectar Auto</div>
+                </div>
+                <div class="code-editor-wrapper">
+                    <textarea id="code-input" placeholder="Pega tu código o pseudocódigo aquí..."
+                        spellcheck="false"></textarea>
+                    <!-- Highlight.js overlay could be added here for better visuals, keeping it simple first -->
+                </div>
+            </section>
+
+            <!-- Action Area (Center) -->
+            <div class="action-area">
+                <button id="translate-btn" class="cta-button">
+                    <span class="btn-content">
+                        <i class="bi bi-stars"></i> Traducir a Bloques
+                    </span>
+                    <div class="shimmer"></div>
+                </button>
+            </div>
+
+            <!-- Scratch Output Section -->
+            <section class="preview-section">
+                <div class="section-header">
+                    <h2><i class="bi bi-puzzle-fill"></i> Resultado Scratch</h2>
+                    <button id="copy-btn" class="sm-btn" title="Copiar SVG">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
+                </div>
+                <div id="scratch-canvas" class="scratch-canvas">
+                    <p class="placeholder-text">Los bloques aparecerán aquí...</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3>Configuración IA</h3>
+                <button id="close-settings" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="info-text">Ingresa tu API Key para habilitar la traducción ilimitada.</p>
+
+                <div class="input-group">
+                    <label for="provider-select">Proveedor</label>
+                    <select id="provider-select">
+                        <option value="gemini">Google Gemini (Recomendado)</option>
+                        <option value="openai">OpenAI (GPT-4)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="api-key">API Key</label>
+                    <input type="password" id="api-key" placeholder="Pegá tu API Key acá...">
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="help-link"
+                        id="api-help">Obtener Gemini API Key gratis</a>
+                </div>
+
+                <button id="save-settings" class="primary-btn">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Scratchblocks CDN -->
+    <script src="https://gjorgjip.github.io/scratchblocks/js/scratchblocks-v3.5-min.js"></script>
+    <script src="https://gjorgjip.github.io/scratchblocks/js/translations-all-v3.5.js"></script>
+
+    <!-- Markdown parser (optional, if AI returns md) -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> -->
+
+    <script src="script.js"></script>
+</body>
+
+</html>
