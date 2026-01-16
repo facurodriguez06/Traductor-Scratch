@@ -471,10 +471,14 @@ window.ScratchBlocksParser = {
 
     // ============ VARIABLES ============
 
+    // Handle both: set [var v] to (value) AND set [var v] to [value v]
     match =
       originalLine.match(/set \[(.+?) v\] to \((.+?)\)/i) ||
+      originalLine.match(/set \[(.+?) v\] to \[(.+?)(?: v)?\]/i) ||
       originalLine.match(/establecer \[(.+?) v\] a \((.+?)\)/i) ||
-      originalLine.match(/fijar \[(.+?) v\] a \((.+?)\)/i);
+      originalLine.match(/establecer \[(.+?) v\] a \[(.+?)(?: v)?\]/i) ||
+      originalLine.match(/fijar \[(.+?) v\] a \((.+?)\)/i) ||
+      originalLine.match(/fijar \[(.+?) v\] a \[(.+?)(?: v)?\]/i);
     if (match) {
       return this.createBlock(
         "data_setvariableto",
