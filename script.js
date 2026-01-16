@@ -12,12 +12,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const apiHelpLink = document.getElementById("api-help");
   const geminiModelInput = document.getElementById("gemini-model");
   const geminiModelGroup = document.getElementById("gemini-model-group");
+  const checkModelsBtn = document.getElementById("check-models-btn");
+  const modelListResult = document.getElementById("model-list-result");
 
   // State
   let apiKey = localStorage.getItem("scratch_ai_key") || "";
   let provider = localStorage.getItem("scratch_ai_provider") || "gemini";
   let geminiModel =
-    localStorage.getItem("scratch_ai_model") || "gemini-1.5-flash";
+    localStorage.getItem("scratch_ai_model") || "gemini-2.5-flash";
 
   // Initialize UI
   if (apiKey) {
@@ -37,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleModelInput(e.target.value);
     updateHelpLink(e.target.value);
   });
+  checkModelsBtn.addEventListener("click", checkAvailableModels);
 
   translateBtn.addEventListener("click", handleTranslate);
 
@@ -69,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function saveSettings() {
     const key = apiKeyInput.value.trim();
     const prov = providerSelect.value;
-    const model = geminiModelInput.value.trim() || "gemini-1.5-flash";
+    const model = geminiModelInput.value.trim() || "gemini-2.5-flash";
 
     if (!key) {
       alert("Por favor ingresa una API Key válida.");
@@ -135,6 +138,38 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       translateBtn.querySelector(".btn-content").innerHTML =
         '<i class="bi bi-stars"></i> Traducir a Bloques';
+    }
+  }
+
+  async function checkAvailableModels() {
+    const key = apiKeyInput.value.trim();
+    if (!key) {
+      alert("Por favor ingresa una API Key primero.");
+      return;
+    }
+
+    modelListResult.textContent = "Buscando modelos...";
+
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`,
+      );
+      if (!response.ok) throw new Error("Error al obtener modelos");
+
+      const data = await response.json();
+      const models = data.models
+        .filter((m) => m.supportedGenerationMethods.includes("generateContent"))
+        .map((m) => m.name.replace("models/", ""))
+        .slice(0, 5); // Show top 5 to avoid clutter
+
+      if (models.length > 0) {
+        modelListResult.innerHTML = `Disponibles: <br> ${models.join(", ")}`;
+        // Auto-fill the first one if current is invalid? No, just show them.
+      } else {
+        modelListResult.textContent = "No se encontraron modelos compatibles.";
+      }
+    } catch (error) {
+      modelListResult.textContent = "Error: " + error.message;
     }
   }
 

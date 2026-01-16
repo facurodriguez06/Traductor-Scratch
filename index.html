@@ -100,7 +100,15 @@
 
                 <div id="gemini-model-group" class="input-group">
                     <label for="gemini-model">Modelo Gemini (Ej: gemini-3-pro)</label>
-                    <input type="text" id="gemini-model" value="gemini-3-pro" placeholder="gemini-3-pro">
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="gemini-model" value="gemini-2.5-flash" placeholder="gemini-2.5-flash">
+                        <button id="check-models-btn" class="sm-btn" title="Ver modelos disponibles"
+                            style="width: auto; padding: 0 10px;">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                    <small id="model-list-result"
+                        style="display: block; margin-top: 5px; color: var(--accent); font-size: 0.8rem;"></small>
                 </div>
 
                 <div class="input-group">
