@@ -395,6 +395,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const spriteData = convertToScratchJSON(lastScratchBlocksCode);
       console.log("Generated sprite data:", spriteData);
       console.log("Total blocks:", Object.keys(spriteData.blocks).length);
+
+      // Debug: Also download the raw JSON
+      const jsonBlob = new Blob([JSON.stringify(spriteData, null, 2)], {
+        type: "application/json",
+      });
+      const jsonUrl = URL.createObjectURL(jsonBlob);
+      const jsonLink = document.createElement("a");
+      jsonLink.href = jsonUrl;
+      jsonLink.download = "sprite_debug.json";
+      jsonLink.click();
+      URL.revokeObjectURL(jsonUrl);
+
       const sprite3Blob = await createSprite3File(spriteData);
 
       // Trigger download
@@ -499,13 +511,13 @@ document.addEventListener("DOMContentLoaded", () => {
       currentCostume: 0,
       costumes: [
         {
+          assetId: "bcf454acf82e4504149f7ffe07081dbc",
           name: "costume1",
           bitmapResolution: 1,
-          dataFormat: "svg",
-          assetId: "bcf454acf82e4504149f7ffe07081dbc",
           md5ext: "bcf454acf82e4504149f7ffe07081dbc.svg",
-          rotationCenterX: 0,
-          rotationCenterY: 0,
+          dataFormat: "svg",
+          rotationCenterX: 48,
+          rotationCenterY: 50,
         },
       ],
       sounds: [],
