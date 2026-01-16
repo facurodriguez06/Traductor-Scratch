@@ -41,6 +41,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   checkModelsBtn.addEventListener("click", checkAvailableModels);
 
+  const copyBtn = document.getElementById("copy-btn");
+  copyBtn.addEventListener("click", handleCopy);
+
   translateBtn.addEventListener("click", handleTranslate);
 
   // scratchblocks init (ensure it's loaded)
@@ -282,6 +285,11 @@ document.addEventListener("DOMContentLoaded", () => {
     scratchCanvas.appendChild(pre);
 
     // Render
+    if (typeof scratchblocks === "undefined") {
+      scratchCanvas.innerHTML =
+        '<p class="placeholder-text" style="color: #ff4444">Error: La librería de Scratch no cargó. Revisa tu conexión.</p>';
+      return;
+    }
     scratchblocks.renderMatching("pre.blocks", {
       style: "scratch3",
       languages: ["es", "en"], // Attempt Spanish translation for blocks
@@ -292,6 +300,56 @@ document.addEventListener("DOMContentLoaded", () => {
     if (svg) {
       svg.style.margin = "auto";
       svg.style.maxWidth = "100%";
+    }
+  }
+
+  async function handleCopy() {
+    const svg = scratchCanvas.querySelector("svg");
+    if (!svg) {
+      alert("No hay bloques para copiar.");
+      return;
+    }
+
+    try {
+      // 1. Serialize SVG
+      const serializer = new XMLSerializer();
+      const svgStr = serializer.serializeToString(svg);
+      const svgBlob = new Blob([svgStr], {
+        type: "image/svg+xml;charset=utf-8",
+      });
+      const url = URL.createObjectURL(svgBlob);
+
+      // 2. Draw to Canvas to convert to PNG
+      const img = new Image();
+      img.onload = async function () {
+        const canvas = document.createElement("canvas");
+        canvas.width = svg.getBoundingClientRect().width * 2; // High 'res'
+        canvas.height = svg.getBoundingClientRect().height * 2;
+        const ctx = canvas.getContext("2d");
+        ctx.scale(2, 2); // Retina quality
+        ctx.drawImage(img, 0, 0);
+
+        // 3. To Blob & Copy
+        canvas.toBlob(async (blob) => {
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({ "image/png": blob }),
+            ]);
+            const originalHtml = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="bi bi-check-lg"></i>';
+            setTimeout(() => (copyBtn.innerHTML = originalHtml), 2000);
+          } catch (err) {
+            console.error(err);
+            alert("Error al copiar imagen: " + err.message);
+          }
+        }, "image/png");
+
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    } catch (e) {
+      console.error(e);
+      alert("Error inesperado al copiar.");
     }
   }
 });
