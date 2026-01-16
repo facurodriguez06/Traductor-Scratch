@@ -392,6 +392,11 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       exportBtn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
 
+      // Debug: show raw scratchblocks text
+      console.log("=== RAW SCRATCHBLOCKS TEXT ===");
+      console.log(lastScratchBlocksCode);
+      console.log("=== END RAW TEXT ===");
+
       const spriteData = convertToScratchJSON(lastScratchBlocksCode);
       console.log("Generated sprite data:", spriteData);
       console.log("Total blocks:", Object.keys(spriteData.blocks).length);
