@@ -52,10 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   translateBtn.addEventListener("click", handleTranslate);
 
-  // scratchblocks init (ensure it's loaded)
-  if (typeof scratchblocks !== "undefined") {
-    scratchblocks.loadLanguages({ es: "es.json" }); // Load Spanish if available, or text based
-  }
+  // scratchblocks is loaded via CDN, no additional init needed
 
   // --- Functions ---
 
